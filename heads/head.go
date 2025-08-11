@@ -1,7 +1,9 @@
 package heads
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/qmsk/dmx"
 	"github.com/qmsk/dmx/logging"
@@ -267,9 +269,51 @@ type APIHeadParams struct {
 	Color     *APIColor                   `json:",omitempty"`
 }
 
+// APIHeadParamsHandler wraps APIHeadParams to handle JSON and Apply automatically
+type APIHeadParamsHandler struct {
+	*APIHeadParams
+}
+
+func (handler *APIHeadParamsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handler.APIHeadParams.head.log.Infof("APIHeadParamsHandler.ServeHTTP called, method: %s", r.Method)
+	
+	if r.Method == "POST" {
+		// Parse JSON from request body
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(handler.APIHeadParams)
+		if err != nil {
+			handler.APIHeadParams.head.log.Errorf("JSON decode error: %v", err)
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+		
+		handler.APIHeadParams.head.log.Infof("Decoded JSON: %+v", handler.APIHeadParams)
+		
+		// Apply the parameters
+		err = handler.APIHeadParams.Apply()
+		if err != nil {
+			handler.APIHeadParams.head.log.Errorf("Apply error: %v", err)
+			http.Error(w, "Apply failed", http.StatusInternalServerError)
+			return
+		}
+		
+		// Return success response
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(handler.APIHeadParams)
+	} else {
+		// For GET requests, just return the current state
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(handler.APIHeadParams)
+	}
+}
+
 func (head *Head) PostREST() (web.Resource, error) {
 	// parameters only, not configuration
-	return &APIHeadParams{head: head}, nil
+	head.log.Info("PostREST called")
+	params := &APIHeadParams{head: head}
+	handler := &APIHeadParamsHandler{APIHeadParams: params}
+	head.log.Infof("Created APIHeadParamsHandler: %+v", handler)
+	return handler, nil
 }
 
 func (head *Head) IntoREST() any {

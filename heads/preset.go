@@ -1,6 +1,7 @@
 package heads
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/qmsk/dmx/logging"
@@ -190,7 +191,10 @@ func (preset *Preset) GetREST() (web.Resource, error) {
 
 func (preset *Preset) PostREST() (web.Resource, error) {
 	preset.log.Info("PostREST called")
-	return &APIPresetParams{preset: preset}, nil
+	params := &APIPresetParams{preset: preset}
+	handler := &APIPresetParamsHandler{APIPresetParams: params}
+	preset.log.Infof("Created APIPresetParamsHandler: %+v", handler)
+	return handler, nil
 }
 
 func (preset *Preset) IntoREST() any {
@@ -202,6 +206,44 @@ type APIPresetParams struct {
 	preset *Preset
 
 	Intensity *Intensity
+}
+
+// APIPresetParamsHandler wraps APIPresetParams to handle JSON and Apply automatically
+type APIPresetParamsHandler struct {
+	*APIPresetParams
+}
+
+func (handler *APIPresetParamsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handler.APIPresetParams.preset.log.Infof("APIPresetParamsHandler.ServeHTTP called, method: %s", r.Method)
+	
+	if r.Method == "POST" {
+		// Parse JSON from request body
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(handler.APIPresetParams)
+		if err != nil {
+			handler.APIPresetParams.preset.log.Errorf("JSON decode error: %v", err)
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+		
+		handler.APIPresetParams.preset.log.Infof("Decoded JSON: %+v", handler.APIPresetParams)
+		
+		// Apply the parameters
+		err = handler.APIPresetParams.Apply()
+		if err != nil {
+			handler.APIPresetParams.preset.log.Errorf("Apply error: %v", err)
+			http.Error(w, "Apply failed", http.StatusInternalServerError)
+			return
+		}
+		
+		// Return success response
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(handler.APIPresetParams)
+	} else {
+		// For GET requests, just return the current state
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(handler.APIPresetParams)
+	}
 }
 
 func (apiPresetParams APIPresetParams) Apply() error {

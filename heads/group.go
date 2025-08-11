@@ -1,6 +1,9 @@
 package heads
 
 import (
+	"encoding/json"
+	"net/http"
+	
 	"github.com/qmsk/dmx/logging"
 	"github.com/qmsk/go-web"
 )
@@ -131,6 +134,44 @@ type APIGroupParams struct {
 	Color     *APIColor     `json:",omitempty"`
 }
 
+// APIGroupParamsHandler wraps APIGroupParams to handle JSON and Apply automatically
+type APIGroupParamsHandler struct {
+	*APIGroupParams
+}
+
+func (handler *APIGroupParamsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handler.APIGroupParams.group.log.Infof("APIGroupParamsHandler.ServeHTTP called, method: %s", r.Method)
+	
+	if r.Method == "POST" {
+		// Parse JSON from request body
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(handler.APIGroupParams)
+		if err != nil {
+			handler.APIGroupParams.group.log.Errorf("JSON decode error: %v", err)
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+		
+		handler.APIGroupParams.group.log.Infof("Decoded JSON: %+v", handler.APIGroupParams)
+		
+		// Apply the parameters
+		err = handler.APIGroupParams.Apply()
+		if err != nil {
+			handler.APIGroupParams.group.log.Errorf("Apply error: %v", err)
+			http.Error(w, "Apply failed", http.StatusInternalServerError)
+			return
+		}
+		
+		// Return success response
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(handler.APIGroupParams)
+	} else {
+		// For GET requests, just return the current state
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(handler.APIGroupParams)
+	}
+}
+
 type APIGroup struct {
 	GroupConfig
 	ID     GroupID
@@ -169,8 +210,9 @@ func (group *Group) GetREST() (web.Resource, error) {
 func (group *Group) PostREST() (web.Resource, error) {
 	group.log.Info("PostREST called")
 	params := &APIGroupParams{group: group}
-	group.log.Infof("Created APIGroupParams: %+v", params)
-	return params, nil
+	handler := &APIGroupParamsHandler{APIGroupParams: params}
+	group.log.Infof("Created APIGroupParamsHandler: %+v", handler)
+	return handler, nil
 }
 
 func (group *Group) IntoREST() any {
