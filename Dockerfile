@@ -1,21 +1,23 @@
-FROM golang:1.9.4 as go-build
+FROM golang:1.22-alpine as go-build
 
-RUN curl -L -o /tmp/dep-linux-amd64 https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 && install -m 0755 /tmp/dep-linux-amd64 /usr/local/bin/dep
+WORKDIR /app
 
-WORKDIR /go/src/github.com/qmsk/dmx
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+RUN go mod download
 
-COPY Gopkg.* ./
-RUN dep ensure -vendor-only
-
+# Copy source code
 COPY . ./
-RUN go install -v ./cmd/...
+
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o qmsk-dmx ./cmd/qmsk-dmx
 
 
 
 
-FROM node:9.8.0 as web-build
+FROM node:20-alpine as web-build
 
-WORKDIR /go/src/github.com/qmsk/dmx/web
+WORKDIR /app/web
 
 COPY web/package.json ./
 RUN npm install
@@ -24,13 +26,14 @@ COPY web ./
 RUN ./node_modules/typescript/bin/tsc
 
 
-# must match with go-build base image
-FROM debian:stretch
+# Final stage with minimal Alpine Linux
+FROM alpine:latest
 
+RUN apk --no-cache add ca-certificates tzdata
 RUN mkdir -p /opt/qmsk-dmx /opt/qmsk-dmx/bin
 
-COPY --from=go-build /go/bin/qmsk-dmx /opt/qmsk-dmx/bin/
-COPY --from=web-build /go/src/github.com/qmsk/dmx/web/ /opt/qmsk-dmx/web
+COPY --from=go-build /app/qmsk-dmx /opt/qmsk-dmx/bin/
+COPY --from=web-build /app/web/ /opt/qmsk-dmx/web
 COPY library/ /opt/qmsk-dmx/library
 
 WORKDIR /opt/qmsk-dmx

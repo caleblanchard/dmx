@@ -2,7 +2,6 @@ package heads
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,7 +10,7 @@ import (
 	"github.com/qmsk/dmx/logging"
 )
 
-func loadToml(obj interface{}, path string) error {
+func loadToml(obj any, path string) error {
 	if meta, err := toml.DecodeFile(path, obj); err != nil {
 		return err
 	} else if len(meta.Undecoded()) > 0 {
@@ -21,7 +20,7 @@ func loadToml(obj interface{}, path string) error {
 	}
 }
 
-func load(obj interface{}, path string) error {
+func load(obj any, path string) error {
 	ext := filepath.Ext(path)
 
 	switch ext {
@@ -36,7 +35,7 @@ func load(obj interface{}, path string) error {
 	}
 }
 
-type configMapper func(id []string) (configObject interface{}, err error)
+type configMapper func(id []string) (configObject any, err error)
 
 // Load config from given path, using the given stat info
 func loadsStat(path string, stat os.FileInfo, mapper configMapper, prefix []string, top bool) error {
@@ -86,25 +85,31 @@ func loadsStat(path string, stat os.FileInfo, mapper configMapper, prefix []stri
 
 // Recursively load multiple config files from a directory
 func loadsDir(dirPath string, mapper configMapper, prefix []string) error {
-	if files, err := ioutil.ReadDir(dirPath); err != nil {
+	if files, err := os.ReadDir(dirPath); err != nil {
 		return fmt.Errorf("read dir %v: %v", dirPath, err)
 	} else {
-		for _, stat := range files {
-			path := filepath.Join(dirPath, stat.Name())
+		for _, entry := range files {
+			path := filepath.Join(dirPath, entry.Name())
+			
+			info, err := entry.Info()
+			if err != nil {
+				logging.Log.Debugf("heads:loadsDir path=%v: skip entry with error: %v", path, err)
+				continue
+			}
 
-			if !(stat.Mode().IsRegular() || stat.Mode().IsDir()) {
+			if !(info.Mode().IsRegular() || info.Mode().IsDir()) {
 				logging.Log.Debugf("heads:loadsDir path=%v: skip irregular", path)
 
 				continue
 			}
 
-			if strings.HasPrefix(stat.Name(), ".") {
+			if strings.HasPrefix(entry.Name(), ".") {
 				logging.Log.Debugf("heads:loadOne path=%v: skip dotfile", path)
 
 				continue
 			}
 
-			if err := loadsStat(path, stat, mapper, prefix, false); err != nil {
+			if err := loadsStat(path, info, mapper, prefix, false); err != nil {
 				return err
 			}
 		}
@@ -133,7 +138,7 @@ type Config struct {
 }
 
 func (config *Config) loadTypes(path string) error {
-	return loads(path, func(id []string) (interface{}, error) {
+	return loads(path, func(id []string) (any, error) {
 		var typeID = TypeID(filepath.Join(id...))
 		var headType = new(HeadType)
 
@@ -144,7 +149,7 @@ func (config *Config) loadTypes(path string) error {
 }
 
 func (config *Config) load(path string) error {
-	return loads(path, func(id []string) (interface{}, error) {
+	return loads(path, func(id []string) (any, error) {
 		if len(id) == 0 {
 			return config, nil
 		}

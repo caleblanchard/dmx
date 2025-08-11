@@ -4,30 +4,30 @@ package logging
 import (
 	"bytes"
 	"fmt"
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"strings"
 )
 
 type Logger interface {
-	Debug(args ...interface{})
-	Debugf(fmt string, args ...interface{})
-	Info(args ...interface{})
-	Infof(fmt string, args ...interface{})
-	Warn(args ...interface{})
-	Warnf(fmt string, args ...interface{})
-	Error(args ...interface{})
-	Errorf(fmt string, args ...interface{})
-	Fatal(args ...interface{})
-	Fatalf(fmt string, args ...interface{})
+	Debug(args ...any)
+	Debugf(fmt string, args ...any)
+	Info(args ...any)
+	Infof(fmt string, args ...any)
+	Warn(args ...any)
+	Warnf(fmt string, args ...any)
+	Error(args ...any)
+	Errorf(fmt string, args ...any)
+	Fatal(args ...any)
+	Fatalf(fmt string, args ...any)
 
-	Logger(field string, value interface{}) Logger
+	Logger(field string, value any) Logger
 }
 
 type Context struct {
 	*logrus.Entry
 }
 
-func (context Context) Logger(field string, value interface{}) Logger {
+func (context Context) Logger(field string, value any) Logger {
 	return Context{context.WithFields(logrus.Fields{"type": field, field: value})}
 }
 
@@ -108,7 +108,7 @@ func (option *Option) UnmarshalFlag(value string) error {
 	return nil
 }
 
-func (option Option) Logger(field string, value interface{}) Logger {
+func (option Option) Logger(field string, value any) Logger {
 	logger := logrus.New()
 	logger.Level = log.Level
 	logger.Formatter = log.Formatter
