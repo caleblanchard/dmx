@@ -41,13 +41,16 @@ func (groupMap groupMap) GetREST() (web.Resource, error) {
 }
 
 func (groupMap groupMap) Index(name string) (web.Resource, error) {
+	logging.Log.Infof("groupMap.Index called with name: %s", name)
 	switch name {
 	case "":
 		return groupMap.makeAPIList(), nil
 	default:
 		if group := groupMap[GroupID(name)]; group == nil {
+			logging.Log.Warnf("Group not found: %s", name)
 			return nil, nil
 		} else {
+			logging.Log.Infof("Found group: %s, returning GetPostResource", name)
 			return web.GetPostResource(group), nil
 		}
 	}
@@ -164,6 +167,7 @@ func (group *Group) GetREST() (web.Resource, error) {
 	return group.makeAPI(), nil
 }
 func (group *Group) PostREST() (web.Resource, error) {
+	group.log.Info("PostREST called")
 	return &APIGroupParams{group: group}, nil
 }
 
@@ -172,6 +176,8 @@ func (group *Group) IntoREST() any {
 }
 
 func (apiGroupParams APIGroupParams) Apply() error {
+	apiGroupParams.group.log.Info("Apply group parameters")
+	
 	if apiGroupParams.Intensity != nil {
 		if err := apiGroupParams.Intensity.initGroup(apiGroupParams.group.intensity); err != nil {
 			return web.RequestError(err)

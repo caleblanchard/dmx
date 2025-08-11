@@ -189,6 +189,7 @@ func (preset *Preset) GetREST() (web.Resource, error) {
 }
 
 func (preset *Preset) PostREST() (web.Resource, error) {
+	preset.log.Info("PostREST called")
 	return &APIPresetParams{preset: preset}, nil
 }
 
