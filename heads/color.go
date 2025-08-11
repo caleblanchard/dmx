@@ -12,6 +12,7 @@ const (
 	ColorChannelRed   = "red"
 	ColorChannelGreen = "green"
 	ColorChannelBlue  = "blue"
+	ColorChannelAmber = "amber"
 )
 
 // Config
@@ -34,10 +35,11 @@ type Color struct {
 	Red   Value
 	Green Value
 	Blue  Value
+	Amber Value
 }
 
 func (color Color) IsZero() bool {
-	return color.Red == 0.0 && color.Green == 0.0 && color.Blue == 0.0
+	return color.Red == 0.0 && color.Green == 0.0 && color.Blue == 0.0 && color.Amber == 0.0
 }
 
 // Linear RGB intensity scaling
@@ -46,6 +48,7 @@ func (color Color) ScaleIntensity(intensity Intensity) Color {
 		Red:   color.Red * Value(intensity),
 		Green: color.Green * Value(intensity),
 		Blue:  color.Blue * Value(intensity),
+		Amber: color.Amber * Value(intensity),
 	}
 }
 
@@ -54,11 +57,12 @@ type HeadColor struct {
 	red       *Channel
 	green     *Channel
 	blue      *Channel
+	amber     *Channel
 	intensity *Channel
 }
 
 func (it HeadColor) exists() bool {
-	return it.red != nil || it.green != nil || it.blue != nil
+	return it.red != nil || it.green != nil || it.blue != nil || it.amber != nil
 }
 
 func (hc HeadColor) Get() (color Color) {
@@ -70,6 +74,9 @@ func (hc HeadColor) Get() (color Color) {
 	}
 	if hc.blue != nil {
 		color.Blue = hc.blue.GetValue()
+	}
+	if hc.amber != nil {
+		color.Amber = hc.amber.GetValue()
 	}
 	return
 }
@@ -83,6 +90,9 @@ func (hc HeadColor) Set(color Color) Color {
 	}
 	if hc.blue != nil {
 		color.Blue = hc.blue.SetValue(color.Blue)
+	}
+	if hc.amber != nil {
+		color.Amber = hc.amber.SetValue(color.Amber)
 	}
 	return color
 }

@@ -218,6 +218,7 @@ func (head *Head) getColor() HeadColor {
 		red:       head.getChannel(ChannelType{Color: ColorChannelRed}),
 		green:     head.getChannel(ChannelType{Color: ColorChannelGreen}),
 		blue:      head.getChannel(ChannelType{Color: ColorChannelBlue}),
+		amber:     head.getChannel(ChannelType{Color: ColorChannelAmber}),
 		intensity: head.getChannel(ChannelType{Intensity: true}),
 	}
 }

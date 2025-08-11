@@ -1,8 +1,8 @@
 [Groups.back-lights.Color]
-Red = 0.0
-Green = 0.0
-Blue = 1.0
-Amber = 0.0
+red = 0.0
+green = 0.0
+blue = 1.0
+amber = 0.0
 
 [Groups.back-lights.Intensity]
 Intensity = 1.0
