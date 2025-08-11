@@ -2,8 +2,7 @@ package heads
 
 import (
 	"encoding/json"
-	"net/http"
-	
+
 	"github.com/qmsk/dmx/logging"
 	"github.com/qmsk/go-web"
 )
@@ -70,6 +69,9 @@ type Group struct {
 	intensity *GroupIntensity
 	color     *GroupColor
 	colors    ColorMap
+	
+	// Store the POST parameters after JSON unmarshaling
+	postParams *APIGroupParams
 }
 
 func (group *Group) addHead(head *Head) {
@@ -130,47 +132,28 @@ func (group *Group) makeColor() GroupColor {
 // Web API
 type APIGroupParams struct {
 	group     *Group
-	Intensity *APIIntensity `json:",omitempty"`
-	Color     *APIColor     `json:",omitempty"`
+	Intensity *APIIntensity `json:"Intensity,omitempty"`
+	Color     *APIColor     `json:"Color,omitempty"`
 }
 
-// APIGroupParamsHandler wraps APIGroupParams to handle JSON and Apply automatically
-type APIGroupParamsHandler struct {
-	*APIGroupParams
-}
-
-func (handler *APIGroupParamsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handler.APIGroupParams.group.log.Infof("APIGroupParamsHandler.ServeHTTP called, method: %s", r.Method)
+func (params *APIGroupParams) UnmarshalJSON(data []byte) error {
+	params.group.log.Infof("UnmarshalJSON called with data: %s", string(data))
 	
-	if r.Method == "POST" {
-		// Parse JSON from request body
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(handler.APIGroupParams)
-		if err != nil {
-			handler.APIGroupParams.group.log.Errorf("JSON decode error: %v", err)
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
-			return
-		}
-		
-		handler.APIGroupParams.group.log.Infof("Decoded JSON: %+v", handler.APIGroupParams)
-		
-		// Apply the parameters
-		err = handler.APIGroupParams.Apply()
-		if err != nil {
-			handler.APIGroupParams.group.log.Errorf("Apply error: %v", err)
-			http.Error(w, "Apply failed", http.StatusInternalServerError)
-			return
-		}
-		
-		// Return success response
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(handler.APIGroupParams)
-	} else {
-		// For GET requests, just return the current state
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(handler.APIGroupParams)
+	type Alias APIGroupParams
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(params),
 	}
+	
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	
+	params.group.log.Infof("UnmarshalJSON completed, Intensity: %+v, Color: %+v", params.Intensity, params.Color)
+	return nil
 }
+
 
 type APIGroup struct {
 	GroupConfig
@@ -208,19 +191,24 @@ func (group *Group) GetREST() (web.Resource, error) {
 	return group.makeAPI(), nil
 }
 func (group *Group) PostREST() (web.Resource, error) {
-	group.log.Info("PostREST called")
+	group.log.Info("Group PostREST called")
+	if group.postParams != nil {
+		group.log.Infof("Returning populated APIGroupParams: %+v", group.postParams)
+		return group.postParams, nil
+	}
+	// Fallback in case postParams wasn't set
 	params := &APIGroupParams{group: group}
-	handler := &APIGroupParamsHandler{APIGroupParams: params}
-	group.log.Infof("Created APIGroupParamsHandler: %+v", handler)
-	return handler, nil
+	group.log.Infof("Created fallback APIGroupParams: %+v", params)
+	return params, nil
 }
 
 func (group *Group) IntoREST() any {
-	return group
+	group.postParams = &APIGroupParams{group: group}
+	return group.postParams
 }
 
-func (apiGroupParams APIGroupParams) Apply() error {
-	apiGroupParams.group.log.Infof("Apply group parameters called with: %+v", apiGroupParams)
+func (apiGroupParams APIGroupParams) ApplyREST() error {
+	apiGroupParams.group.log.Infof("ApplyREST group parameters called with: %+v", apiGroupParams)
 	
 	if apiGroupParams.Intensity != nil {
 		apiGroupParams.group.log.Infof("Applying intensity: %+v", apiGroupParams.Intensity)

@@ -1,9 +1,6 @@
-[Groups.led-par.Color]
+[Groups.back-lights.Color]
 Red = 1.0
 Blue = 0.5
 
-[Groups.tri-bar.Intensity]
+[Groups.front-lights.Intensity]
 Intensity = 1.0
-[Groups.tri-bar.Color]
-Red = 1.0
-Blue = 0.5
