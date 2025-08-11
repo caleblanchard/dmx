@@ -208,7 +208,7 @@ func (apiPresetParams APIPresetParams) Apply() error {
 	var preset = apiPresetParams.preset
 	var event APIEvents
 
-	preset.log.Info("Apply")
+	preset.log.Infof("Apply preset called with: %+v", apiPresetParams)
 
 	if allParams := preset.Config.All; allParams != nil {
 		for _, head := range preset.allHeads {

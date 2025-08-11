@@ -168,7 +168,9 @@ func (group *Group) GetREST() (web.Resource, error) {
 }
 func (group *Group) PostREST() (web.Resource, error) {
 	group.log.Info("PostREST called")
-	return &APIGroupParams{group: group}, nil
+	params := &APIGroupParams{group: group}
+	group.log.Infof("Created APIGroupParams: %+v", params)
+	return params, nil
 }
 
 func (group *Group) IntoREST() any {
@@ -176,9 +178,10 @@ func (group *Group) IntoREST() any {
 }
 
 func (apiGroupParams APIGroupParams) Apply() error {
-	apiGroupParams.group.log.Info("Apply group parameters")
+	apiGroupParams.group.log.Infof("Apply group parameters called with: %+v", apiGroupParams)
 	
 	if apiGroupParams.Intensity != nil {
+		apiGroupParams.group.log.Infof("Applying intensity: %+v", apiGroupParams.Intensity)
 		if err := apiGroupParams.Intensity.initGroup(apiGroupParams.group.intensity); err != nil {
 			return web.RequestError(err)
 		} else if err := apiGroupParams.Intensity.Apply(); err != nil {
