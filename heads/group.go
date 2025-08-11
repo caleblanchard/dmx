@@ -45,7 +45,11 @@ func (groupMap groupMap) Index(name string) (web.Resource, error) {
 	case "":
 		return groupMap.makeAPIList(), nil
 	default:
-		return groupMap[GroupID(name)], nil
+		if group := groupMap[GroupID(name)]; group == nil {
+			return nil, nil
+		} else {
+			return web.GetPostResource(group), nil
+		}
 	}
 }
 
@@ -161,6 +165,10 @@ func (group *Group) GetREST() (web.Resource, error) {
 }
 func (group *Group) PostREST() (web.Resource, error) {
 	return &APIGroupParams{group: group}, nil
+}
+
+func (group *Group) IntoREST() any {
+	return group
 }
 
 func (apiGroupParams APIGroupParams) Apply() error {

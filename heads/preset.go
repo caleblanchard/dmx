@@ -127,7 +127,11 @@ func (presetMap presetMap) GetREST() (web.Resource, error) {
 }
 
 func (presetMap presetMap) Index(name string) (web.Resource, error) {
-	return presetMap[PresetID(name)], nil
+	if preset := presetMap[PresetID(name)]; preset == nil {
+		return nil, nil
+	} else {
+		return web.GetPostResource(preset), nil
+	}
 }
 
 type Preset struct {
@@ -186,6 +190,10 @@ func (preset *Preset) GetREST() (web.Resource, error) {
 
 func (preset *Preset) PostREST() (web.Resource, error) {
 	return &APIPresetParams{preset: preset}, nil
+}
+
+func (preset *Preset) IntoREST() any {
+	return preset
 }
 
 // API POST

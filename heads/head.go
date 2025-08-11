@@ -98,7 +98,11 @@ func (headMap headMap) Index(name string) (web.Resource, error) {
 	case "":
 		return headList(headMap), nil
 	default:
-		return headMap[HeadID(name)], nil
+		if head := headMap[HeadID(name)]; head == nil {
+			return nil, nil
+		} else {
+			return web.GetPostResource(head), nil
+		}
 	}
 }
 
@@ -266,6 +270,10 @@ type APIHeadParams struct {
 func (head *Head) PostREST() (web.Resource, error) {
 	// parameters only, not configuration
 	return &APIHeadParams{head: head}, nil
+}
+
+func (head *Head) IntoREST() any {
+	return head
 }
 
 func (post *APIHeadParams) Apply() error {

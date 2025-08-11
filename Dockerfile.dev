@@ -1,0 +1,51 @@
+# Development Dockerfile with debugging support
+FROM golang:1.22-alpine as go-build
+
+# Install delve debugger and git
+RUN apk add --no-cache git
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+WORKDIR /app
+
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . ./
+
+# Build the application with debug symbols
+RUN CGO_ENABLED=0 GOOS=linux go build -gcflags="all=-N -l" -o qmsk-dmx ./cmd/qmsk-dmx
+
+# Web build stage (same as production)
+FROM node:20-alpine as web-build
+
+WORKDIR /app/web
+
+COPY web/package.json ./
+RUN npm install
+
+COPY web ./
+RUN ./node_modules/typescript/bin/tsc
+
+# Final development stage
+FROM golang:1.22-alpine
+
+# Install delve debugger
+RUN apk add --no-cache git ca-certificates tzdata
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+RUN mkdir -p /opt/qmsk-dmx /opt/qmsk-dmx/bin /app
+
+# Copy built application
+COPY --from=go-build /app/qmsk-dmx /app/
+COPY --from=web-build /app/web/ /app/web
+COPY library/ /app/library
+
+WORKDIR /app
+
+# Expose debugging port
+EXPOSE 8000 2345
+
+# Default to running with debugger
+CMD ["/go/bin/dlv", "exec", "/app/qmsk-dmx", "--listen=:2345", "--headless=true", "--api-version=2", "--accept-multiclient", "--continue", "--", "--log=debug", "--http-listen=:8000", "--http-static=/app/web/", "--heads-library=/app/library/", "/etc/qmsk-dmx"]

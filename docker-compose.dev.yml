@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  dmx-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"    # Web UI
+      - "2345:2345"    # Delve debugger
+    volumes:
+      - ./config:/etc/qmsk-dmx:ro
+      - ./:/app/src     # Mount source code for development
+    environment:
+      - ARTNET_DISCOVERY=2.255.255.255
+      - CGO_ENABLED=0
+    networks:
+      - dmx-network
+    restart: unless-stopped
+    command: [
+      "/go/bin/dlv", "exec", "/app/qmsk-dmx",
+      "--listen=:2345", 
+      "--headless=true", 
+      "--api-version=2",
+      "--accept-multiclient",
+      "--continue",
+      "--",
+      "--log=debug",
+      "--http-listen=:8000",
+      "--http-static=/app/web/",
+      "--heads-library=/app/library/",
+      "/etc/qmsk-dmx"
+    ]
+
+  dmx-prod:
+    image: dmx-fixed:latest
+    ports:
+      - "8080:8000"    # Production web UI on different port
+    volumes:
+      - ./config:/etc/qmsk-dmx:ro
+    environment:
+      - ARTNET_DISCOVERY=2.255.255.255
+    networks:
+      - dmx-network
+    restart: unless-stopped
+
+networks:
+  dmx-network:
+    driver: bridge
