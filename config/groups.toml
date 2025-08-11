@@ -1,8 +1,5 @@
-[led-par]
-Name        = "LED-Par"
+[front-lights]
+Name        = "Front Lights"
 
-[tri-bar]
-Name        = "Tri-Bar"
-
-[led-wall]
-Name        = "LED Wall"
+[back-lights]
+Name        = "Back Lights"

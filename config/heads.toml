@@ -1,29 +1,99 @@
-[led-par]
-Type        = "stairville/ledpar56-5ch"
+# Front Stage Lights - Chauvet DJ EVE E-50Z
+[front-1]
+Type        = "chauvet-dj/eve-e50z"
 Universe    = 1
 Address     = 1
-Count       = 1
-Name        = "LED-Par"
-Groups      = ["led-par"]
+Name        = "Front Light 1"
+Groups      = ["front-lights"]
 
-[tribar-1]
-Type        = "american-dj/megatri60_mode2"
+[front-2]
+Type        = "chauvet-dj/eve-e50z"
 Universe    = 1
-Address     = 20
-Name        = "TriBar @ floor"
-Groups      = ["tri-bar"]
+Address     = 4
+Name        = "Front Light 2"
+Groups      = ["front-lights"]
 
-[tribar-2]
-Type        = "american-dj/megatri60_mode2"
+[front-3]
+Type        = "chauvet-dj/eve-e50z"
 Universe    = 1
-Address     = 30
-Name        = "TriBar @ wall"
-Groups      = ["tri-bar"]
+Address     = 7
+Name        = "Front Light 3"
+Groups      = ["front-lights"]
 
-[dimmer]
-Type        = "generic/dimmer-1ch"
+[front-4]
+Type        = "chauvet-dj/eve-e50z"
 Universe    = 1
-Address     = 250
-Count       = 4
-Name        = "Dimmer"
-Groups      = ["dimmer"]
+Address     = 10
+Name        = "Front Light 4"
+Groups      = ["front-lights"]
+
+[front-5]
+Type        = "chauvet-dj/eve-e50z"
+Universe    = 1
+Address     = 13
+Name        = "Front Light 5"
+Groups      = ["front-lights"]
+
+[front-6]
+Type        = "chauvet-dj/eve-e50z"
+Universe    = 1
+Address     = 16
+Name        = "Front Light 6"
+Groups      = ["front-lights"]
+
+# Back Stage Lights - Chauvet DJ SlimPAR Q12 USB
+[back-1]
+Type        = "chauvet-dj/slimpar-q12-usb"
+Universe    = 1
+Address     = 19
+Name        = "Back Light 1"
+Groups      = ["back-lights"]
+
+[back-2]
+Type        = "chauvet-dj/slimpar-q12-usb"
+Universe    = 1
+Address     = 28
+Name        = "Back Light 2"
+Groups      = ["back-lights"]
+
+[back-3]
+Type        = "chauvet-dj/slimpar-q12-usb"
+Universe    = 1
+Address     = 37
+Name        = "Back Light 3"
+Groups      = ["back-lights"]
+
+[back-4]
+Type        = "chauvet-dj/slimpar-q12-usb"
+Universe    = 1
+Address     = 46
+Name        = "Back Light 4"
+Groups      = ["back-lights"]
+
+[back-5]
+Type        = "chauvet-dj/slimpar-q12-usb"
+Universe    = 1
+Address     = 55
+Name        = "Back Light 5"
+Groups      = ["back-lights"]
+
+[back-6]
+Type        = "chauvet-dj/slimpar-q12-usb"
+Universe    = 1
+Address     = 64
+Name        = "Back Light 6"
+Groups      = ["back-lights"]
+
+[back-7]
+Type        = "chauvet-dj/slimpar-q12-usb"
+Universe    = 1
+Address     = 73
+Name        = "Back Light 7"
+Groups      = ["back-lights"]
+
+[back-8]
+Type        = "chauvet-dj/slimpar-q12-usb"
+Universe    = 1
+Address     = 82
+Name        = "Back Light 8"
+Groups      = ["back-lights"]

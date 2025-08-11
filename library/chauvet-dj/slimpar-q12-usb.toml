@@ -1,0 +1,30 @@
+Vendor = "Chauvet DJ"
+Model  = "SlimPAR Q12 USB"
+Mode   = "9ch"
+
+[[Channels]]
+Color = "red"
+
+[[Channels]]
+Color = "green"
+
+[[Channels]]
+Color = "blue"
+
+[[Channels]]
+Color = "amber"
+
+[[Channels]]
+Control = "macro"
+
+[[Channels]]
+Control = "strobe"
+
+[[Channels]]
+Control = "mode"
+
+[[Channels]]
+Intensity = true
+
+[[Channels]]
+Control = "speed"

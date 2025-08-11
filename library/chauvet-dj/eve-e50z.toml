@@ -1,0 +1,12 @@
+Vendor = "Chauvet DJ"
+Model  = "EVE E-50Z"
+Mode   = "3ch"
+
+[[Channels]]
+Intensity = true
+
+[[Channels]]
+Control = "strobe"
+
+[[Channels]]
+Control = "speed"

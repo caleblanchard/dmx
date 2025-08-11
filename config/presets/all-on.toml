@@ -1,0 +1,11 @@
+[Groups.front-lights.Intensity]
+Intensity = 1.0
+
+[Groups.back-lights.Color]
+Red = 1.0
+Green = 1.0
+Blue = 1.0
+Amber = 0.5
+
+[Groups.back-lights.Intensity]
+Intensity = 1.0
