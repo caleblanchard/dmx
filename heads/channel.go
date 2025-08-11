@@ -97,6 +97,10 @@ func (channel *Channel) PostREST() (web.Resource, error) {
 	return &APIChannelParams{channel: channel}, nil
 }
 
+func (channel *Channel) IntoREST() any {
+	return channel
+}
+
 func (params *APIChannelParams) Apply() error {
 	if params.DMX != nil {
 		params.channel.SetDMX(*params.DMX)

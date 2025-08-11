@@ -137,7 +137,7 @@ func (headChannels HeadChannels) Index(name string) (web.Resource, error) {
 	if channel := headChannels.GetID(name); channel == nil {
 		return nil, nil
 	} else {
-		return channel, nil
+		return web.GetPostResource(channel), nil
 	}
 }
 
